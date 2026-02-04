@@ -1,38 +1,20 @@
 # \# TRACE ProofFeed
 
-# \*\*Verifiable Agent Reasoning on Solana\*\*
+# 
+
+# \*\*Verifiable Agent Reasoning Infrastructure on Solana\*\*
 
 # 
 
-# TRACE ProofFeed is an autonomous agent system that makes AI reasoning \*\*verifiable\*\*, not just observable.
+# TRACE ProofFeed is an infrastructure component that enables AI agents to publish
+
+# \*\*verifiable reasoning outputs\*\*, anchored by cryptographic commitments on Solana.
 
 # 
 
-# Instead of trusting opaque agent outputs, TRACE ProofFeed commits cryptographic hashes of reasoning results on Solana, then reveals and verifies them end-to-end.
+# It allows anyone to independently verify that a given reasoning artifact
 
-# 
-
-# ---
-
-# 
-
-# \## Problem
-
-# AI agents increasingly make decisions that affect capital, governance, and security — but their reasoning is unverifiable.
-
-# 
-
-# Most agent systems:
-
-# \- Log text outputs off-chain
-
-# \- Cannot prove what was actually reasoned at decision time
-
-# \- Offer no cryptographic link between reasoning and action
-
-# 
-
-# This creates a trust gap.
+# has not been altered after publication.
 
 # 
 
@@ -40,65 +22,41 @@
 
 # 
 
-# \## Solution
-
-# TRACE ProofFeed introduces \*\*verifiable agent reasoning\*\* using Solana as a commitment layer.
+# \## Motivation
 
 # 
 
-# Each reasoning output:
+# AI agents are increasingly used for:
 
-# 1\. Is hashed and committed on-chain
+# \- trading and execution
 
-# 2\. Can be revealed later
+# \- governance and policy decisions
 
-# 3\. Can be independently verified by any third party
+# \- security analysis
 
-# 
-
-# No trust required.
+# \- automated coordination
 
 # 
 
-# ---
+# However, most agent systems today suffer from a fundamental problem:
 
 # 
 
-# \## Architecture
-
-# 1\. Agent generates a reasoning result
-
-# 2\. Hash is committed on Solana devnet via Anchor (commit phase)
-
-# 3\. Reasoning is revealed later (reveal phase)
-
-# 4\. Verifier reconstructs the hash
-
-# 5\. On-chain commitment is validated
-
-# 6\. Result is streamed into TRACE as L0/L1/L2 summaries
+# > \*\*Reasoning is opaque and mutable.\*\*
 
 # 
 
-# ---
+# Logs can be rewritten, explanations can be regenerated, and users have no way
+
+# to verify whether a published explanation corresponds to what the agent
+
+# actually reasoned at the time of decision.
 
 # 
 
-# \## Demo
+# TRACE ProofFeed addresses this gap by introducing \*\*cryptographic accountability
 
-# Current demo shows:
-
-# \- Commit → Reveal → Verify flow on Solana devnet
-
-# \- Verifier reconstructing hashes
-
-# \- Proofs prepared for TRACE timeline ingestion
-
-# 
-
-# 👉 Demo entry point:  
-
-# https://github.com/TRACE-CChain-Labs/trace-prooffeed-solana-agent/tree/main/web
+# for agent reasoning\*\*.
 
 # 
 
@@ -106,37 +64,29 @@
 
 # 
 
-# \## Why Solana
-
-# \- Fast, low-cost commitments
-
-# \- Deterministic state
-
-# \- Public verification
-
-# \- Ideal for agent-scale frequency
+# \## What This Project Does
 
 # 
 
-# Solana acts as the \*\*ground truth layer\*\* for agent reasoning.
+# TRACE ProofFeed provides a simple but powerful primitive:
 
 # 
 
-# ---
+# > \*\*Commit agent reasoning → anchor it on-chain → allow independent verification.\*\*
 
 # 
 
-# \## Why this matters
+# It does \*\*not\*\* attempt to:
 
-# \- Enables trust-minimized AI systems
+# \- judge whether reasoning is correct
 
-# \- Creates auditability for autonomous agents
+# \- enforce agent behavior
 
-# \- Forms the basis for reputation, slashing, and governance
+# \- replace existing agent frameworks
 
 # 
 
-# TRACE ProofFeed is designed to plug into TRACE / C-Chain as a reasoning proof substrate.
+# Instead, it focuses on \*\*verifiability\*\* and \*\*auditability\*\*.
 
 # 
 
@@ -144,31 +94,263 @@
 
 # 
 
-# \## Status
-
-# \- ✔ Anchor commit/reveal design
-
-# \- ✔ Verifier logic defined
-
-# \- ✔ Devnet integration
-
-# \- ⏳ UI + live feed expansion
+# \## System Overview
 
 # 
 
-# ---
+# At a high level, the system consists of four parts:
 
 # 
 
-# \## Roadmap
+# Agent
 
-# \- Live verifier UI
+# └─ produces reasoning output
 
-# \- Agent reputation scoring
+# 
 
-# \- TRACE timeline integration
+# Commitment Layer (Solana)
 
-# \- Multi-agent proof aggregation
+# └─ stores cryptographic hash of reasoning
+
+# 
+
+# ProofFeed Service
+
+# └─ indexes metadata and exposes verification endpoints
+
+# 
+
+# Verifier
+
+# └─ recomputes hash and checks on-chain commitment
+
+
+
+Each component is deliberately simple and independently inspectable.
+
+
+
+---
+
+
+
+\## Reasoning Proof Flow
+
+
+
+1\. \*\*Agent produces a reasoning artifact\*\*
+
+&nbsp;  - Structured JSON
+
+&nbsp;  - Deterministic serialization
+
+
+
+2\. \*\*Commit\*\*
+
+&nbsp;  - SHA-256 hash of the reasoning is computed
+
+&nbsp;  - Hash is committed to Solana (devnet) via an Anchor program
+
+
+
+3\. \*\*Reveal\*\*
+
+&nbsp;  - Full reasoning artifact is published off-chain
+
+
+
+4\. \*\*Verify\*\*
+
+&nbsp;  - Anyone can recompute the hash
+
+&nbsp;  - The hash is compared against the on-chain commitment
+
+
+
+If the hashes match, the reasoning is proven to be unchanged since commitment.
+
+
+
+---
+
+
+
+\## Solana Integration
+
+
+
+\- \*\*Network\*\*: Solana Devnet
+
+\- \*\*Purpose\*\*: Immutable timestamped commitments
+
+\- \*\*On-chain data\*\*:
+
+&nbsp; - Commitment hash
+
+&nbsp; - Minimal metadata (no raw reasoning stored on-chain)
+
+
+
+Solana is used strictly as a \*\*commitment anchor\*\*, not as a data store.
+
+
+
+---
+
+
+
+\## Design Principles
+
+
+
+\### 1. Minimal Trust
+
+No trusted verifier, no privileged backend, no private APIs required to verify a proof.
+
+
+
+\### 2. Deterministic Verification
+
+Given the same reasoning artifact, anyone will compute the same hash.
+
+
+
+\### 3. Infrastructure First
+
+This project focuses on primitives that other agent systems can build upon.
+
+
+
+\### 4. Human-Readable Outputs
+
+While verification is machine-based, results are intended to be interpretable
+
+by humans (e.g. timelines, summaries, audit trails).
+
+
+
+---
+
+
+
+\## Repository Structure
+
+
+
+.
+
+├─ agent/ # agent-side reasoning \& commitment logic
+
+├─ programs/ # Anchor program for commitment registry
+
+├─ verifier/ # standalone verification logic
+
+├─ web/ # optional inspection / demo utilities
+
+└─ README.md
+
+
+
+Each directory can be reviewed independently.
+
+
+
+---
+
+
+
+\## Judge Quickstart
+
+
+
+This repository is intentionally designed to be reviewable without running
+
+private infrastructure.
+
+
+
+Recommended review path:
+
+1\. Inspect how reasoning is serialized
+
+2\. Inspect how hashes are computed
+
+3\. Inspect how verification recomputes and compares hashes
+
+
+
+All cryptographic operations use standard SHA-256 and are deterministic.
+
+
+
+---
+
+
+
+\## Status
+
+
+
+\- ✔ End-to-end commit → reveal → verify flow implemented
+
+\- ✔ Solana devnet integration
+
+\- ✔ Standalone verifier logic
+
+\- ✔ Private MVP deployment (infra not required for review)
+
+
+
+Planned (out of scope for hackathon):
+
+\- Public verifier UI
+
+\- Mainnet deployment
+
+\- Multi-agent aggregation
+
+
+
+---
+
+
+
+\## Why This Matters
+
+
+
+As agents become autonomous actors, \*\*verifiable reasoning\*\* becomes as important as:
+
+\- verifiable execution
+
+\- verifiable state
+
+\- verifiable identity
+
+
+
+TRACE ProofFeed provides a foundational building block for:
+
+\- agent reputation systems
+
+\- dispute resolution
+
+\- governance auditability
+
+\- trust-minimized AI infrastructure
+
+
+
+---
+
+
+
+\## Repository
+
+
+
+https://github.com/TRACE-CChain-Labs/trace-prooffeed-solana-agent
 
 
 
