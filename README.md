@@ -1,12 +1,15 @@
-# TRACE ProofFeed
+﻿# TRACE ProofFeed (Solana Agent Hackathon)
 
 **Verifiable Agent Reasoning (Solana Devnet) — Commit → Reveal → Verify**
 
 TRACE ProofFeed turns an agent’s reasoning output into a **tamper-evident artifact**.  
-An agent run emits a **canonical JSON reasoning artifact**, we compute **SHA-256**, **commit** the hash on **Solana Devnet**, then anyone can later **recompute** and verify **MATCH / MISMATCH** against the on-chain commitment.
+An agent run emits a **canonical JSON reasoning artifact**, we compute **SHA-256**, and (when wired) **commit** the hash on **Solana Devnet**.  
+Anyone can later **recompute** and verify **MATCH / MISMATCH** against the commitment.
 
 > This project does **not** judge whether reasoning is “correct”.  
-> It proves whether a published reasoning artifact has been **altered after the commitment**.
+> It proves whether a published reasoning artifact has been **altered after it was anchored**.
+
+![Verify UI](docs/verify.png)
 
 ---
 
@@ -15,13 +18,20 @@ An agent run emits a **canonical JSON reasoning artifact**, we compute **SHA-256
 ### Public Verifier UI
 - **Web:** https://trace-prooffeed.vercel.app
 
-### Verifier API (via the Web project)
-- **Health:** https://trace-prooffeed.vercel.app/api/healthz  
-- **Latest proofs:** https://trace-prooffeed.vercel.app/api/proofs/latest?n=3  
-- **Proof detail (example):** https://trace-prooffeed.vercel.app/api/proofs/demo-001  
+### Public API (No Auth)
+> Judges should use the **public** endpoints below. No token required.
 
-> Public demo is **de-sensitized by design**.  
-> The verifier backend is self-hosted and accessed through a **secure proxy + token auth**, so the demo does not leak private infrastructure.
+- **Health:** https://trace-prooffeed.vercel.app/api/healthz  
+- **Latest proofs:** https://trace-prooffeed.vercel.app/api/public/proofs/latest?n=3  
+- **Proof detail (example):** https://trace-prooffeed.vercel.app/api/public/proofs/demo-001
+
+**One-liner (copy/paste)**
+~~~bash
+curl -s "https://trace-prooffeed.vercel.app/api/public/proofs/latest?n=3"
+~~~
+
+> Note: `/api/proofs/*` is a protected interface for private verifier access.  
+> Public judging flow uses `/api/public/proofs/*`.
 
 ---
 
@@ -30,19 +40,19 @@ An agent run emits a **canonical JSON reasoning artifact**, we compute **SHA-256
 1) Open the public UI  
    - https://trace-prooffeed.vercel.app
 
-2) Fetch latest proofs  
-   - https://trace-prooffeed.vercel.app/api/proofs/latest?n=3
+2) Fetch latest proofs (public)  
+   - https://trace-prooffeed.vercel.app/api/public/proofs/latest?n=3
 
 3) Open one proof (e.g. `demo-001`)  
-   - https://trace-prooffeed.vercel.app/api/proofs/demo-001
+   - https://trace-prooffeed.vercel.app/api/public/proofs/demo-001
 
 4) What you verify  
-   - The proof contains a **canonical JSON artifact** (deterministic).
-   - The verifier computes **sha256(canonical_artifact)**.
-   - That hash must match the **on-chain commitment** recorded on **Solana Devnet**.
+   - The proof contains a **canonical JSON artifact** (deterministic string).
+   - The verifier recomputes **sha256(canonicalArtifact)**.
+   - The verifier outputs a verification-style result: **MATCH / MISMATCH**.
 
-✅ If hashes match → **MATCH** (artifact unchanged since commit)  
-❌ If hashes differ → **MISMATCH** (artifact tampered / re-generated / modified)
+✅ If hashes match → **MATCH** (artifact unchanged)  
+❌ If hashes differ → **MISMATCH** (artifact tampered / regenerated / modified)
 
 ---
 
@@ -54,7 +64,7 @@ But today, most “agent logs” are **mutable**: they can be rewritten, summari
 TRACE ProofFeed introduces **cryptographic accountability for reasoning**:
 
 - **Verifiable**: anyone can recompute the same hash.
-- **Auditable**: commitments are immutable and timestamped on-chain.
+- **Auditable**: commitments are immutable and timestamped on-chain (devnet for demo).
 - **Composable**: other systems can build reputation, dispute resolution, or governance auditing on top.
 
 ---
@@ -67,9 +77,23 @@ We treat reasoning as a **data artifact** that can be cryptographically anchored
 
 ---
 
-## Architecture Overview
+## Public Demo Model (De-sensitized / Proxied)
 
-**Components (intentionally minimal and inspectable):**
+The public surface is designed to **avoid leaking private infrastructure**:
+- no internal IPs
+- no topology labels
+- no privileged endpoints
+
+For hackathon judging, the web deployment (e.g., Vercel) provides a **public, no-auth** feed:
+- canonical artifacts
+- computed hashes
+- verification-style outputs
+
+Privileged verification / devnet lookups can live behind protected routes.
+
+---
+
+## Architecture Overview
 
 1) **Agent**
    - Produces a reasoning artifact (canonical JSON)
@@ -80,100 +104,37 @@ We treat reasoning as a **data artifact** that can be cryptographically anchored
 
 3) **Indexer / ProofFeed Service**
    - Tracks proof metadata (off-chain)
-   - Exposes endpoints for proofs + verification
+   - Exposes proof endpoints + verification report
 
-4) **Verifier**
+4) **Verifier UI**
    - Recomputes SHA-256 from revealed artifact
-   - Compares against the on-chain commitment
+   - (Next wiring) compares against on-chain commitment
    - Outputs `MATCH` / `MISMATCH`
-
----
-
-## Proof Flow (Commit → Reveal → Verify)
-
-### 1) Produce (Agent)
-- Agent emits a **canonical JSON** reasoning artifact:
-  - stable key ordering
-  - stable whitespace rules
-  - deterministic serialization
-
-### 2) Commit (On-chain)
-- Compute: `commitment = sha256(canonical_json_bytes)`
-- Record the commitment on **Solana Devnet** via an Anchor program
-
-### 3) Reveal (Off-chain)
-- Publish the full artifact (and/or store it in a public proof registry)
-
-### 4) Verify (Anyone)
-- Recompute: `sha256(revealed_canonical_json_bytes)`
-- Compare to the on-chain commitment
-- Result:
-  - `MATCH` if unchanged
-  - `MISMATCH` if altered
-
----
-
-## Solana Integration
-
-- **Network:** Solana Devnet
-- **Purpose:** immutable, timestamped commitment anchor
-- **On-chain data:** commitment hash + minimal metadata only  
-  (raw reasoning is not stored on-chain)
-
-Solana is used as a **commitment anchor**, not a data store.
-
----
-
-## What This Project Is / Is Not
-
-### ✅ This project IS:
-- A verifiable reasoning commitment pipeline
-- A minimal verifier + proof registry pattern
-- A composable primitive for trust-minimized agent infrastructure
-
-### ❌ This project is NOT:
-- A judge of “correctness” of reasoning
-- A behavior enforcement system
-- A replacement for existing agent frameworks
 
 ---
 
 ## Repository Structure
 
-> (Folder names may evolve; this describes the intended boundaries.)
-
-- `programs/` — Anchor program (commitment registry)
+- `program/` — Anchor program (commitment registry)
 - `agent/` — agent-side artifact generation + commit logic
-- `verifier/` — deterministic hashing + verification routines
 - `web/` — public UI + API routes (Vercel deploy)
-- `README.md` — judge-ready overview + quickstart
-
-Each module is designed to be reviewed independently.
+- `docs/verify.png` — README screenshot
 
 ---
 
-## Security & De-sensitization
+## Local Development (web)
 
-- Public demo avoids leaking private topology:
-  - no internal IPs
-  - no node labels
-  - no privileged endpoints exposed
-- Backend access is protected behind a secure proxy + token auth.
-- The trust story is explicit:
-  - **Keep infra private**
-  - **Make verification public**
+~~~bash
+cd web
+npm ci
+npm run dev
+~~~
 
----
-
-## Roadmap (post-hackathon)
-
-- Public “Verify” UI that shows:
-  - proof list
-  - computed hash
-  - on-chain commitment hash
-  - explorer link to devnet tx
-- Multi-agent aggregation and reputation hooks
-- Mainnet deployment (if/when needed)
+Then open:
+- http://localhost:3000
+- http://localhost:3000/api/healthz
+- http://localhost:3000/api/public/proofs/latest?n=3
+- http://localhost:3000/api/public/proofs/demo-001
 
 ---
 
