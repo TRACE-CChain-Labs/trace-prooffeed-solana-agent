@@ -41,3 +41,10 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+.env*.local
+
+.demo-devnet-keypair.json
+
+# demo devnet payer
+.demo-devnet-keypair.json
+
