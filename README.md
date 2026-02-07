@@ -16,6 +16,18 @@ Anyone can later **recompute** and verify whether the published artifact is **MA
 
 ## Live Demo (Judges)
 
+### On-chain Verify (Devnet Memo Anchor)
+- Verify one proof against its Solana Devnet memo anchor:
+  - https://trace-prooffeed.vercel.app/api/public/verify/demo-001
+
+This returns:
+- `computedSha256` (recomputed from the public canonicalArtifact)
+- `onchain.txSig` + Explorer link (devnet)
+- memo payload format: `trace_pf_v1|<proofId>|<sha256>`
+
+> Tip: the public proof endpoints also include `txSig` + `explorer` for each demo proof.
+
+
 ### Public Verifier UI
 - **Web:** https://trace-prooffeed.vercel.app
 
