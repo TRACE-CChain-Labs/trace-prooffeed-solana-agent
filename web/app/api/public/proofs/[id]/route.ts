@@ -18,7 +18,7 @@ function idFromUrl(req: Request) {
   }
 }
 
-export async function GET(req: Request, ctx: { params: Promise<{ id: string }> } | any) {
+export async function GET(req: Request, ctx: any) {
   // Next 16+: params is a Promise
   let id = "";
   try {
