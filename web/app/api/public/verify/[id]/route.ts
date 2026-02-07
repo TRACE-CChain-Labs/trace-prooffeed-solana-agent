@@ -2,7 +2,7 @@
 
 import crypto from "crypto";
 import { NextResponse } from "next/server";
-import { getById } from "../_demo";
+import { getById } from "../../proofs/_demo";
 
 function sha256Hex(s: string) {
   return crypto.createHash("sha256").update(s, "utf8").digest("hex");
@@ -18,17 +18,14 @@ function idFromUrl(req: Request) {
   }
 }
 
-export async function GET(req: Request, ctx: any) {
-  // Next 16+: params is a Promise
+export async function GET(req: Request, ctx: { params: Promise<{ id: string }> } | any) {
   let id = "";
   try {
     if (ctx?.params) {
       const p = await ctx.params;
       id = p?.id ? String(p.id) : "";
     }
-  } catch {
-    // ignore and fallback to URL parsing
-  }
+  } catch {}
 
   if (!id) id = idFromUrl(req);
   id = decodeURIComponent(String(id || "")).trim();
@@ -42,14 +39,26 @@ export async function GET(req: Request, ctx: any) {
     return NextResponse.json({ ok: false, error: "NOT_FOUND" }, { status: 404 });
   }
 
+  const computed = sha256Hex(proof.canonicalArtifact);
+  const tx = (proof as any).tx || null;
+
   return NextResponse.json(
     {
       ok: true,
-      proof: {
-        ...proof,
-        sha256: sha256Hex(proof.canonicalArtifact),
-        source: "demo",
-      },
+      proofId: proof.proofId,
+      computedSha256: computed,
+      onchain: tx
+        ? {
+            txSig: tx,
+            explorer: `https://explorer.solana.com/tx/${tx}?cluster=devnet`,
+            memoFormat: `trace_pf_v1|${proof.proofId}|${computed}`,
+          }
+        : {
+            txSig: null,
+            explorer: null,
+            memoFormat: `trace_pf_v1|${proof.proofId}|${computed}`,
+          },
+      note: "This endpoint does not prove correctness. It proves whether the published artifact hash matches the on-chain anchored value.",
     },
     { headers: { "Cache-Control": "no-store" } }
   );
