@@ -15,6 +15,9 @@ Anyone can later **recompute** and verify **MATCH / MISMATCH** against the commi
 
 ## Live Demo (Judges)
 
+On-chain verify (Memo anchor): https://trace-prooffeed.vercel.app/api/public/verify/demo-001
+Returns computedSha256 and the devnet txSig memo anchor → proves the artifact hash matches the on-chain anchored value.
+
 ### Public Verifier UI
 - **Web:** https://trace-prooffeed.vercel.app
 
