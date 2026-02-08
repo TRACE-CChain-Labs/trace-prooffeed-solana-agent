@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import Hero from "@/components/hero/Hero";
 
 type Lang = "en" | "zh";
 
@@ -357,6 +358,8 @@ export default function Page() {
             </button>
           </div>
         </header>
+
+        <Hero />
 
         {/* Hero */}
         <section className="mt-10 grid gap-6 md:grid-cols-2">
